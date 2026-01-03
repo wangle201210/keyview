@@ -45,6 +45,11 @@ export const api = {
     return await AppService.GetUniqueKeyNames()
   },
 
+  // 获取按键统计（支持日期范围筛选）
+  async getKeyStats(startDate = '', endDate = '') {
+    return await AppService.GetKeyStats(startDate, endDate)
+  },
+
   // 删除指定日期之前的记录
   async deleteRecordsBefore(date) {
     return await AppService.DeleteRecordsBefore(date)

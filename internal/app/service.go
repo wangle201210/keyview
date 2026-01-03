@@ -258,6 +258,105 @@ func (s *AppService) DeleteRecordsBefore(date string) (int64, error) {
 	return result.RowsAffected, result.Error
 }
 
+// KeyStats 按键统计
+type KeyStats struct {
+	KeyName string `json:"key_name"`
+	Count   int64  `json:"count"`
+}
+
+// GetKeyStats 获取所有按键的统计次数（支持日期范围筛选）
+func (s *AppService) GetKeyStats(startDate, endDate string) ([]KeyStats, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	if s.db == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+
+	query := s.db.Model(&KeyRecord{})
+
+	if startDate != "" {
+		query = query.Where("created_at >= ?", startDate)
+	}
+	if endDate != "" {
+		query = query.Where("created_at <= ?", endDate)
+	}
+
+	var stats []KeyStats
+	err := query.
+		Select("key_name, count(*) as count").
+		Group("key_name").
+		Order("count DESC").
+		Find(&stats).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	// 添加修饰键统计
+	modifierStats, err := s.getModifierStats(startDate, endDate)
+	if err != nil {
+		return nil, err
+	}
+
+	stats = append(stats, modifierStats...)
+	return stats, err
+}
+
+// getModifierStats 获取修饰键的统计次数（支持日期范围筛选）
+func (s *AppService) getModifierStats(startDate, endDate string) ([]KeyStats, error) {
+	if s.db == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+
+	// 定义修饰键标志位
+	// 0x10000 (65536) = Caps Lock
+	// 0x20000 (131072) = Shift
+	// 0x40000 (262144) = Control
+	// 0x80000 (524288) = Option
+	// 0x100000 (1048576) = Command
+
+	modifiers := []struct {
+		name string
+		flag int
+	}{
+		{"Shift", 0x20000},
+		{"Control", 0x40000},
+		{"Option", 0x80000},
+		{"Command", 0x100000},
+		{"Caps Lock", 0x10000},
+	}
+
+	var stats []KeyStats
+
+	for _, mod := range modifiers {
+		var count int64
+		query := s.db.Model(&KeyRecord{}).Where("modifier_flags & ? > 0", mod.flag)
+
+		if startDate != "" {
+			query = query.Where("created_at >= ?", startDate)
+		}
+		if endDate != "" {
+			query = query.Where("created_at <= ?", endDate)
+		}
+
+		err := query.Count(&count).Error
+
+		if err != nil {
+			return nil, err
+		}
+
+		if count > 0 {
+			stats = append(stats, KeyStats{
+				KeyName: mod.name,
+				Count:   count,
+			})
+		}
+	}
+
+	return stats, nil
+}
+
 // Close 关闭服务
 func (s *AppService) Close() error {
 	s.mu.Lock()

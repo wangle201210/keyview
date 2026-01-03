@@ -2,6 +2,11 @@
   <div class="app">
     <header class="header">
       <h1>KeyView - 键盘使用历史记录</h1>
+      <div class="github-link" @click="openGitHub">
+        <svg height="24" viewBox="0 0 16 16" version="1.1" width="24" aria-hidden="true">
+          <path fill="white" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+        </svg>
+      </div>
     </header>
 
     <main class="main">
@@ -22,20 +27,29 @@
       </div>
 
       <div class="filters">
-        <select v-model="filterKeyName" @change="applyFilters">
-          <option value="">所有按键</option>
-          <option v-for="key in uniqueKeys" :key="key" :value="key">
-            {{ key }}
-          </option>
-        </select>
+        <el-select v-model="filterKeyName" placeholder="所有按键" @change="applyFilters" style="width: 200px">
+          <el-option label="所有按键" value="" />
+          <el-option
+            v-for="key in uniqueKeys"
+            :key="key"
+            :label="key"
+            :value="key"
+          />
+        </el-select>
 
-        <input
-          type="date"
-          v-model="filterDate"
+        <el-date-picker
+          v-model="dateRange"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
           @change="applyFilters"
-          :max="today"
+          style="width: 240px"
         />
       </div>
+
+      <!-- 虚拟键盘 -->
+      <VirtualKeyboard :keyStats="keyStats" />
 
       <div class="table-container">
         <table class="data-table">
@@ -86,20 +100,35 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { Browser } from '@wailsio/runtime'
 import { api } from './services/wails.js'
+import VirtualKeyboard from './components/VirtualKeyboard.vue'
 
 const isRecording = ref(true) // 默认为监听状态
 const records = ref([])
 const currentPage = ref(1)
 const pageSize = 50
 const filterKeyName = ref('')
-const filterDate = ref('')
+const dateRange = ref([]) // 日期范围 [开始日期, 结束日期]
 const totalRecordCount = ref(0)
 const todayKeyCount = ref(0)
-const today = new Date().toISOString().split('T')[0]
+const keyStats = ref([])
+
+// 打开 GitHub 链接
+async function openGitHub() {
+  await Browser.OpenURL('https://github.com/wangle201210/keyview')
+}
 
 // 自动刷新定时器
 let refreshTimer = null
+
+// 初始化日期范围为当前月份
+function initDateRange() {
+  const now = new Date()
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  dateRange.value = [firstDay, lastDay]
+}
 
 const filteredRecords = computed(() => {
   let result = [...records.value]
@@ -108,11 +137,16 @@ const filteredRecords = computed(() => {
     result = result.filter(r => r.key_name === filterKeyName.value)
   }
 
-  if (filterDate.value) {
-    const date = new Date(filterDate.value)
+  if (dateRange.value && dateRange.value.length === 2) {
+    const [start, end] = dateRange.value
+    const startDate = new Date(start)
+    startDate.setHours(0, 0, 0, 0)
+    const endDate = new Date(end)
+    endDate.setHours(23, 59, 59, 999)
+
     result = result.filter(r => {
       const recordDate = new Date(r.created_at)
-      return recordDate.toDateString() === date.toDateString()
+      return recordDate >= startDate && recordDate <= endDate
     })
   }
 
@@ -171,6 +205,7 @@ async function refreshData() {
 
 function applyFilters() {
   currentPage.value = 1
+  loadKeyStats() // 重新加载键盘统计
 }
 
 function prevPage() {
@@ -213,14 +248,38 @@ async function loadStats() {
   }
 }
 
+async function loadKeyStats() {
+  try {
+    let startDate = ''
+    let endDate = ''
+
+    if (dateRange.value && dateRange.value.length === 2) {
+      const [start, end] = dateRange.value
+      startDate = new Date(start).toISOString()
+      endDate = new Date(end).toISOString()
+    }
+
+    const stats = await api.getKeyStats(startDate, endDate)
+    keyStats.value = stats
+  } catch (error) {
+    console.error('Failed to load key stats:', error)
+    keyStats.value = []
+  }
+}
+
 onMounted(async () => {
+  // 初始化日期范围为当前月份
+  initDateRange()
+
   await loadRecords()
   await loadStats()
+  await loadKeyStats()
 
   // 每5秒自动刷新数据
   refreshTimer = setInterval(async () => {
     await loadRecords()
     await loadStats()
+    await loadKeyStats()
   }, 5000)
 })
 
@@ -242,12 +301,38 @@ onUnmounted(() => {
   backdrop-filter: blur(10px);
   padding: 1.5rem 2rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .header h1 {
   color: white;
   font-size: 1.8rem;
   font-weight: 600;
+  margin: 0;
+}
+
+.github-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.github-link:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.github-link svg {
+  width: 24px;
+  height: 24px;
 }
 
 .main {
@@ -335,22 +420,7 @@ onUnmounted(() => {
   gap: 1rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
-}
-
-.filters select,
-.filters input[type="date"] {
-  padding: 0.6rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.9);
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.filters select:hover,
-.filters input[type="date"]:hover {
-  border-color: rgba(255, 255, 255, 0.5);
+  align-items: center;
 }
 
 .table-container {

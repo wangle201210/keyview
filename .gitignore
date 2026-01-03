@@ -45,3 +45,5 @@ frontend/.vite/
 
 # Logs
 *.log
+/node_modules/
+/.task/
