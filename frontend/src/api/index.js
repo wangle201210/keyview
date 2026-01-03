@@ -26,8 +26,8 @@ export const api = {
   },
 
   // 根据条件筛选记录
-  async getRecordsByFilter(keyName, date, isDown, offset = 0, limit = 50) {
-    return await AppService.GetRecordsByFilter(keyName, date, isDown, offset, limit)
+  async getRecordsByFilter(keyName, startDate, endDate, offset = 0, limit = 50) {
+    return await AppService.GetRecordsByFilter(keyName, startDate, endDate, offset, limit)
   },
 
   // 获取总记录数

@@ -3,35 +3,16 @@ package app
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"sync"
 	"time"
 
 	"github.com/wangle201210/keylogger"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
-
-// KeyRecord 数据库记录模型
-type KeyRecord struct {
-	ID            uint      `json:"id"`
-	CreatedAt     time.Time `json:"created_at"`
-	KeyCode       int       `json:"key_code"`
-	KeyName       string    `json:"key_name"`
-	IsDown        bool      `json:"is_down"`
-	ModifierFlags int       `json:"modifier_flags"`
-}
-
-// TableName 指定表名
-func (KeyRecord) TableName() string {
-	return "key_records"
-}
 
 // AppService 主应用服务
 type AppService struct {
 	mu              sync.RWMutex
-	db              *gorm.DB
+	repository      *Repository
 	storage         *keylogger.SQLiteStorage
 	isRecording     bool
 	cancelRecording context.CancelFunc
@@ -49,30 +30,18 @@ func (s *AppService) Init() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// 获取用户数据目录
-	homeDir, err := getUserDataDir()
+	// 获取数据库路径
+	dbPath, err := GetDatabasePath()
 	if err != nil {
-		return fmt.Errorf("failed to get user data dir: %w", err)
+		return fmt.Errorf("failed to get database path: %w", err)
 	}
 
-	dbPath := filepath.Join(homeDir, "keyview.db")
-
-	// 打开数据库连接
-	config := &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
-	}
-
-	db, err := gorm.Open(sqlite.Open(dbPath), config)
+	// 创建数据库仓库
+	repo, err := NewRepository(dbPath)
 	if err != nil {
-		return fmt.Errorf("failed to connect database: %w", err)
+		return fmt.Errorf("failed to create repository: %w", err)
 	}
-
-	s.db = db
-
-	// 自动迁移表结构
-	if err := db.AutoMigrate(&KeyRecord{}); err != nil {
-		return fmt.Errorf("failed to migrate database: %w", err)
-	}
+	s.repository = repo
 
 	// 创建 keylogger 存储
 	s.storage, err = keylogger.NewSQLiteStorage(dbPath)
@@ -89,7 +58,6 @@ func (s *AppService) Init() error {
 // startRecordingInBackground 在后台启动键盘监听
 func (s *AppService) startRecordingInBackground() {
 	keylogger.StartWithStorage(func(event keylogger.KeyEvent) {
-		fmt.Println(event.KeyName)
 		// 事件已通过存储自动保存
 	}, s.storage)
 	s.isRecording = true
@@ -151,48 +119,23 @@ func (s *AppService) GetRecords(offset, limit int) ([]KeyRecord, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	if s.db == nil {
-		return nil, fmt.Errorf("database not initialized")
+	if s.repository == nil {
+		return nil, fmt.Errorf("repository not initialized")
 	}
 
-	var records []KeyRecord
-	err := s.db.Order("created_at DESC").
-		Limit(limit).
-		Offset(offset).
-		Find(&records).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return records, err
+	return s.repository.FindByPage(offset, limit)
 }
 
 // GetRecordsByFilter 根据条件筛选获取键盘记录
-func (s *AppService) GetRecordsByFilter(keyName string, date string, offset, limit int) ([]KeyRecord, error) {
+func (s *AppService) GetRecordsByFilter(keyName, startDate, endDate string, offset, limit int) ([]KeyRecord, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	if s.db == nil {
-		return nil, fmt.Errorf("database not initialized")
+	if s.repository == nil {
+		return nil, fmt.Errorf("repository not initialized")
 	}
 
-	query := s.db.Model(&KeyRecord{})
-
-	if keyName != "" {
-		query = query.Where("key_name = ?", keyName)
-	}
-
-	if date != "" {
-		query = query.Where("DATE(created_at) = ?", date)
-	}
-
-	var records []KeyRecord
-	err := query.Order("created_at DESC").
-		Limit(limit).
-		Offset(offset).
-		Find(&records).Error
-
-	return records, err
+	return s.repository.FindByFilter(keyName, startDate, endDate, offset, limit)
 }
 
 // GetTotalCount 获取总记录数
@@ -200,13 +143,11 @@ func (s *AppService) GetTotalCount() (int64, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	if s.db == nil {
-		return 0, fmt.Errorf("database not initialized")
+	if s.repository == nil {
+		return 0, fmt.Errorf("repository not initialized")
 	}
 
-	var count int64
-	err := s.db.Model(&KeyRecord{}).Count(&count).Error
-	return count, err
+	return s.repository.Count()
 }
 
 // GetTodayKeystrokes 获取今日按键次数
@@ -214,17 +155,12 @@ func (s *AppService) GetTodayKeystrokes() (int64, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	if s.db == nil {
-		return 0, fmt.Errorf("database not initialized")
+	if s.repository == nil {
+		return 0, fmt.Errorf("repository not initialized")
 	}
 
-	var count int64
-	today := time.Now().Format("2006-01-02")
-	err := s.db.Model(&KeyRecord{}).
-		Where("DATE(created_at) = ?", today).
-		Count(&count).Error
-
-	return count, err
+	today := getCurrentDate()
+	return s.repository.CountByDate(today)
 }
 
 // GetUniqueKeyNames 获取所有唯一的按键名称
@@ -232,36 +168,11 @@ func (s *AppService) GetUniqueKeyNames() ([]string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	if s.db == nil {
-		return nil, fmt.Errorf("database not initialized")
+	if s.repository == nil {
+		return nil, fmt.Errorf("repository not initialized")
 	}
 
-	var keyNames []string
-	err := s.db.Model(&KeyRecord{}).
-		Distinct("key_name").
-		Order("key_name ASC").
-		Pluck("key_name", &keyNames).Error
-
-	return keyNames, err
-}
-
-// DeleteRecordsBefore 删除指定日期之前的记录
-func (s *AppService) DeleteRecordsBefore(date string) (int64, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if s.db == nil {
-		return 0, fmt.Errorf("database not initialized")
-	}
-
-	result := s.db.Where("created_at < ?", date).Delete(&KeyRecord{})
-	return result.RowsAffected, result.Error
-}
-
-// KeyStats 按键统计
-type KeyStats struct {
-	KeyName string `json:"key_name"`
-	Count   int64  `json:"count"`
+	return s.repository.GetUniqueKeyNames()
 }
 
 // GetKeyStats 获取所有按键的统计次数（支持日期范围筛选）
@@ -269,92 +180,36 @@ func (s *AppService) GetKeyStats(startDate, endDate string) ([]KeyStats, error) 
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	if s.db == nil {
-		return nil, fmt.Errorf("database not initialized")
+	if s.repository == nil {
+		return nil, fmt.Errorf("repository not initialized")
 	}
 
-	query := s.db.Model(&KeyRecord{})
-
-	if startDate != "" {
-		query = query.Where("created_at >= ?", startDate)
-	}
-	if endDate != "" {
-		query = query.Where("created_at <= ?", endDate)
-	}
-
-	var stats []KeyStats
-	err := query.
-		Select("key_name, count(*) as count").
-		Group("key_name").
-		Order("count DESC").
-		Find(&stats).Error
-
+	// 获取普通按键统计
+	stats, err := s.repository.GetKeyStats(startDate, endDate)
 	if err != nil {
 		return nil, err
 	}
 
 	// 添加修饰键统计
-	modifierStats, err := s.getModifierStats(startDate, endDate)
+	modifierStats, err := s.repository.GetModifierStats(startDate, endDate)
 	if err != nil {
 		return nil, err
 	}
 
 	stats = append(stats, modifierStats...)
-	return stats, err
+	return stats, nil
 }
 
-// getModifierStats 获取修饰键的统计次数（支持日期范围筛选）
-func (s *AppService) getModifierStats(startDate, endDate string) ([]KeyStats, error) {
-	if s.db == nil {
-		return nil, fmt.Errorf("database not initialized")
+// DeleteRecordsBefore 删除指定日期之前的记录
+func (s *AppService) DeleteRecordsBefore(date string) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.repository == nil {
+		return 0, fmt.Errorf("repository not initialized")
 	}
 
-	// 定义修饰键标志位
-	// 0x10000 (65536) = Caps Lock
-	// 0x20000 (131072) = Shift
-	// 0x40000 (262144) = Control
-	// 0x80000 (524288) = Option
-	// 0x100000 (1048576) = Command
-
-	modifiers := []struct {
-		name string
-		flag int
-	}{
-		{"Shift", 0x20000},
-		{"Control", 0x40000},
-		{"Option", 0x80000},
-		{"Command", 0x100000},
-		{"Caps Lock", 0x10000},
-	}
-
-	var stats []KeyStats
-
-	for _, mod := range modifiers {
-		var count int64
-		query := s.db.Model(&KeyRecord{}).Where("modifier_flags & ? > 0", mod.flag)
-
-		if startDate != "" {
-			query = query.Where("created_at >= ?", startDate)
-		}
-		if endDate != "" {
-			query = query.Where("created_at <= ?", endDate)
-		}
-
-		err := query.Count(&count).Error
-
-		if err != nil {
-			return nil, err
-		}
-
-		if count > 0 {
-			stats = append(stats, KeyStats{
-				KeyName: mod.name,
-				Count:   count,
-			})
-		}
-	}
-
-	return stats, nil
+	return s.repository.DeleteBefore(date)
 }
 
 // Close 关闭服务
@@ -370,12 +225,14 @@ func (s *AppService) Close() error {
 		_ = s.storage.Close()
 	}
 
+	if s.repository != nil {
+		return s.repository.Close()
+	}
+
 	return nil
 }
 
-// getUserDataDir 获取用户数据目录
-func getUserDataDir() (string, error) {
-	// 简单实现，返回当前目录
-	// 实际应该根据平台返回合适的目录
-	return ".", nil
+// getCurrentDate 获取当前日期字符串
+func getCurrentDate() string {
+	return time.Now().Format("2006-01-02")
 }
