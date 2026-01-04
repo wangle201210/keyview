@@ -2,8 +2,8 @@
 set -e
 
 # Build configuration
-APP_NAME="test-wails3"
-BUNDLE_ID="com.example.testwails3"
+APP_NAME="KeyView"
+BUNDLE_ID="com.example.KeyView"
 VERSION="0.1.0"
 BUILD_NUMBER="0.1.0"
 BUILD_DIR="build/ios"

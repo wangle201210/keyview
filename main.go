@@ -1,12 +1,16 @@
 package main
 
 import (
+	"embed"
+	_ "embed"
 	"log"
-	"net/http"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wangle201210/keyview/internal/app"
 )
+
+//go:embed all:frontend/dist
+var assets embed.FS
 
 func main() {
 	// 创建应用服务
@@ -22,7 +26,7 @@ func main() {
 		Name:        "KeyView",
 		Description: "键盘使用历史记录查看��具",
 		Assets: application.AssetOptions{
-			Handler: http.FileServer(http.Dir("./frontend/dist")),
+			Handler: application.AssetFileServerFS(assets),
 		},
 		Services: []application.Service{
 			application.NewService(appService),
@@ -34,8 +38,8 @@ func main() {
 
 	// 创建主窗口
 	wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title: "KeyView - 键盘使用历史记录",
-		Width: 1280,
+		Title:  "KeyView - 键盘使用历史记录",
+		Width:  1280,
 		Height: 800,
 		Mac: application.MacWindow{
 			TitleBar: application.MacTitleBarDefault,

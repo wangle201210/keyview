@@ -1,17 +1,17 @@
 package app
 
 import (
+	"os"
 	"path/filepath"
 )
 
 // GetUserDataDir 获取用户数据目录
 func GetUserDataDir() (string, error) {
-	// TODO: 实现跨平台的用户数据目录获取
-	// macOS: ~/Library/Application Support/KeyView
-	// Windows: %APPDATA%/KeyView
-	// Linux: ~/.config/keyview
-	// 目前简单实现，返回当前目录
-	return ".", nil
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(homeDir, ".keyview"), nil
 }
 
 // GetDatabasePath 获取数据库文件路径
@@ -20,5 +20,11 @@ func GetDatabasePath() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	// 确保目录存在
+	if err := os.MkdirAll(homeDir, 0755); err != nil {
+		return "", err
+	}
+
 	return filepath.Join(homeDir, "keyview.db"), nil
 }

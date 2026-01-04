@@ -1,13 +1,13 @@
 [Desktop Entry]
 Version=1.0
 Name=My Product
-Comment=A test-wails3 application
+Comment=A KeyView application
 # The Exec line includes %u to pass the URL to the application
-Exec=/usr/local/bin/test-wails3 %u
+Exec=/usr/local/bin/KeyView %u
 Terminal=false
 Type=Application
-Icon=test-wails3
+Icon=KeyView
 Categories=Utility;
-StartupWMClass=test-wails3
+StartupWMClass=KeyView
 
  

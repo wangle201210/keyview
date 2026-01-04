@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@wailsio/runtime": "^3.0.0-alpha.77",
-    "element-plus": "^2.13.0"
-  }
-}

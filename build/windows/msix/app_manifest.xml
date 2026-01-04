@@ -6,7 +6,7 @@
   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10">
   
   <Identity 
-    Name="com.example.testwails3"
+    Name="com.example.KeyView"
     Publisher="CN=My Company"
     Version="0.1.0.0" 
     ProcessorArchitecture="x64" />
@@ -14,7 +14,7 @@
   <Properties>
     <DisplayName>My Product</DisplayName>
     <PublisherDisplayName>My Company</PublisherDisplayName>
-    <Description>A test-wails3 application</Description>
+    <Description>A KeyView application</Description>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
   
@@ -27,10 +27,10 @@
   </Resources>
   
   <Applications>
-    <Application Id="com.example.testwails3" Executable="test-wails3" EntryPoint="Windows.FullTrustApplication">
+    <Application Id="com.example.KeyView" Executable="KeyView" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
         DisplayName="My Product"
-        Description="A test-wails3 application"
+        Description="A KeyView application"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
@@ -39,7 +39,7 @@
       </uap:VisualElements>
       
       <Extensions>
-        <desktop:Extension Category="windows.fullTrustProcess" Executable="test-wails3" />
+        <desktop:Extension Category="windows.fullTrustProcess" Executable="KeyView" />
         
       </Extensions>
     </Application>

@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>test-wails3</string>
+    <string>KeyView</string>
     <key>CFBundleIdentifier</key>
-    <string>com.example.testwails3.dev</string>
+    <string>com.example.KeyView.dev</string>
     <key>CFBundleName</key>
     <string>My Product (Dev)</string>
     <key>CFBundleDisplayName</key>
@@ -52,7 +52,7 @@
     <true/>
     
     <key>NSHumanReadableCopyright</key>
-    <string>© 2025, My Company</string>
+    <string>© 2026, My Company</string>
     
     
     <key>CFBundleGetInfoString</key>
