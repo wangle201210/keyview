@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -16,6 +17,7 @@ type AppService struct {
 	storage         *keylogger.SQLiteStorage
 	isRecording     bool
 	cancelRecording context.CancelFunc
+	logFile         *os.File
 }
 
 // NewAppService 创建新的应用服务
@@ -30,37 +32,63 @@ func (s *AppService) Init() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// 初始化日志文件
+	logPath, err := GetLogPath()
+	if err != nil {
+		return fmt.Errorf("failed to get log path: %w", err)
+	}
+
+	s.logFile, err = os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open log file: %w", err)
+	}
+
+	s.logInfo("========================================")
+	s.logInfo("KeyView 应用启动")
+	s.logInfo("日志文件: %s", logPath)
+
 	// 获取数据库路径
 	dbPath, err := GetDatabasePath()
 	if err != nil {
+		s.logError("获取数据库路径失败: %v", err)
 		return fmt.Errorf("failed to get database path: %w", err)
 	}
+	s.logInfo("数据库路径: %s", dbPath)
 
 	// 创建数据库仓库
 	repo, err := NewRepository(dbPath)
 	if err != nil {
+		s.logError("创建数据库仓库失败: %v", err)
 		return fmt.Errorf("failed to create repository: %w", err)
 	}
 	s.repository = repo
+	s.logInfo("数据库仓库创建成功")
 
 	// 创建 keylogger 存储
 	s.storage, err = keylogger.NewSQLiteStorage(dbPath)
 	if err != nil {
+		s.logError("创建 keylogger 存储失败: %v", err)
 		return fmt.Errorf("failed to create storage: %w", err)
 	}
+	s.logInfo("keylogger 存储创建成功")
 
 	// 自动启动键盘监听
+	s.logInfo("正在启动键盘监听...")
 	go s.startRecordingInBackground()
 
+	s.logInfo("初始化完成")
 	return nil
 }
 
 // startRecordingInBackground 在后台启动键盘监听
 func (s *AppService) startRecordingInBackground() {
+	s.logInfo("键盘监听 goroutine 启动")
 	keylogger.StartWithStorage(func(event keylogger.KeyEvent) {
+		s.logInfo("捕获键盘事件: KeyCode=%d, KeyName=%s, IsDown=%v", event.KeyCode, event.KeyName, event.IsDown)
 		// 事件已通过存储自动保存
 	}, s.storage)
 	s.isRecording = true
+	s.logInfo("键盘监听已启动")
 }
 
 // StartRecording 开始记录键盘事件
@@ -217,6 +245,12 @@ func (s *AppService) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if s.logFile != nil {
+		s.logInfo("KeyView 应用关闭")
+		s.logFile.Close()
+		s.logFile = nil
+	}
+
 	if s.isRecording && s.cancelRecording != nil {
 		s.cancelRecording()
 	}
@@ -235,4 +269,26 @@ func (s *AppService) Close() error {
 // getCurrentDate 获取当前日期字符串
 func getCurrentDate() string {
 	return time.Now().Format("2006-01-02")
+}
+
+// logInfo 记录日志信息
+func (s *AppService) logInfo(format string, args ...interface{}) {
+	if s.logFile == nil {
+		return
+	}
+	timestamp := time.Now().Format("2006-01-02 15:04:05.000")
+	msg := fmt.Sprintf("[%s] [INFO] %s\n", timestamp, fmt.Sprintf(format, args...))
+	s.logFile.WriteString(msg)
+	s.logFile.Sync()
+}
+
+// logError 记录错误日志
+func (s *AppService) logError(format string, args ...interface{}) {
+	if s.logFile == nil {
+		return
+	}
+	timestamp := time.Now().Format("2006-01-02 15:04:05.000")
+	msg := fmt.Sprintf("[%s] [ERROR] %s\n", timestamp, fmt.Sprintf(format, args...))
+	s.logFile.WriteString(msg)
+	s.logFile.Sync()
 }

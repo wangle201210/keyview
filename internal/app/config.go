@@ -28,3 +28,18 @@ func GetDatabasePath() (string, error) {
 
 	return filepath.Join(homeDir, "keyview.db"), nil
 }
+
+// GetLogPath 获取日志文件路径
+func GetLogPath() (string, error) {
+	homeDir, err := GetUserDataDir()
+	if err != nil {
+		return "", err
+	}
+
+	// 确保目录存在
+	if err := os.MkdirAll(homeDir, 0755); err != nil {
+		return "", err
+	}
+
+	return filepath.Join(homeDir, "keyview.log"), nil
+}

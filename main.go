@@ -24,7 +24,7 @@ func main() {
 	// 创建 Wails 应用
 	wailsApp := application.New(application.Options{
 		Name:        "KeyView",
-		Description: "键盘使用历史记录查看��具",
+		Description: "键盘使用历史记录查看工具",
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
 		},
@@ -32,7 +32,8 @@ func main() {
 			application.NewService(appService),
 		},
 		Mac: application.MacOptions{
-			ApplicationShouldTerminateAfterLastWindowClosed: true,
+			ActivationPolicy: application.ActivationPolicyRegular,
+			ApplicationShouldTerminateAfterLastWindowClosed: false,
 		},
 	})
 

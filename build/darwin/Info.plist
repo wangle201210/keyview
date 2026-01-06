@@ -27,5 +27,7 @@
     <false/>
     <key>NSSupportsAutomaticTermination</key>
     <true/>
+    <key>NSAccessibilityUsageDescription</key>
+    <string>KeyView 需要监听键盘事件以记录你的按键历史，帮助你了解键盘使用情况。</string>
 </dict>
 </plist>
