@@ -72,16 +72,13 @@ func (s *AppService) Init() error {
 	}
 	s.logInfo("keylogger 存储创建成功")
 
-	// 自动启动键盘监听
-	s.logInfo("正在启动键盘监听...")
-	go s.startRecordingInBackground()
-
-	s.logInfo("初始化完成")
+	// 不再自动启动键盘监听，由外部调用 StartRecording 来启动
+	s.logInfo("初始化完成，等待启动键盘监听")
 	return nil
 }
 
-// startRecordingInBackground 在后台启动键盘监听
-func (s *AppService) startRecordingInBackground() {
+// StartRecordingInBackground 在后台启动键盘监听
+func (s *AppService) StartRecordingInBackground() {
 	s.logInfo("键盘监听 goroutine 启动")
 	keylogger.StartWithStorage(func(event keylogger.KeyEvent) {
 		s.logInfo("捕获键盘事件: KeyCode=%d, KeyName=%s, IsDown=%v", event.KeyCode, event.KeyName, event.IsDown)

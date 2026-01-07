@@ -4,6 +4,7 @@ import (
 	"embed"
 	_ "embed"
 	"log"
+	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
@@ -54,6 +55,12 @@ func main() {
 	wailsApp.Event.OnApplicationEvent(events.Mac.ApplicationShouldHandleReopen, func(appEvent *application.ApplicationEvent) {
 		mainWindow.Show()
 	})
+
+	// 延迟启动键盘监听，让窗口先显示
+	go func() {
+		time.Sleep(2 * time.Second)             // 等待窗口显示
+		appService.StartRecordingInBackground() // 启动键盘监听，触发权限弹框
+	}()
 
 	// 启动应用
 	if err := wailsApp.Run(); err != nil {

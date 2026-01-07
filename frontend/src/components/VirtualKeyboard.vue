@@ -93,11 +93,11 @@
     <!-- 图例 -->
     <div class="legend">
       <div class="legend-item">
-        <div class="legend-color" style="background: #e3f2fd;"></div>
+        <div class="legend-color" style="background: hsl(210, 80%, 95%);"></div>
         <span>少</span>
       </div>
       <div class="legend-item">
-        <div class="legend-color" style="background: #2196f3;"></div>
+        <div class="legend-color" style="background: hsl(180, 80%, 30%);"></div>
         <span>多</span>
       </div>
     </div>
