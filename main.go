@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/events"
 	"github.com/wangle201210/keyview/internal/app"
 )
 
@@ -23,30 +24,35 @@ func main() {
 
 	// 创建 Wails 应用
 	wailsApp := application.New(application.Options{
-		Name:        "KeyView",
-		Description: "键盘使用历史记录查看工具",
-		Assets: application.AssetOptions{
-			Handler: application.AssetFileServerFS(assets),
-		},
+		Name: "KeyView",
 		Services: []application.Service{
 			application.NewService(appService),
 		},
 		Mac: application.MacOptions{
-			ActivationPolicy: application.ActivationPolicyRegular,
 			ApplicationShouldTerminateAfterLastWindowClosed: false,
+		},
+		Assets: application.AssetOptions{
+			Handler: application.AssetFileServerFS(assets),
 		},
 	})
 
 	// 创建主窗口
-	wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:  "KeyView - 键盘使用历史记录",
+	mainWindow := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title:  "KeyView",
 		Width:  1280,
 		Height: 800,
-		Mac: application.MacWindow{
-			TitleBar: application.MacTitleBarDefault,
-		},
-		BackgroundColour: application.NewRGB(255, 255, 255),
-		URL:              "/",
+		URL:    "/",
+	})
+
+	// 监听窗口关闭事件，改为最小化窗口而不是关闭
+	mainWindow.RegisterHook(events.Common.WindowClosing, func(event *application.WindowEvent) {
+		mainWindow.Minimise()
+		event.Cancel()
+	})
+
+	// 点击程序坞图标时重新显示窗口
+	wailsApp.Event.OnApplicationEvent(events.Mac.ApplicationShouldHandleReopen, func(appEvent *application.ApplicationEvent) {
+		mainWindow.Show()
 	})
 
 	// 启动应用
