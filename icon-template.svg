@@ -1,0 +1,134 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 背景渐变 -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- 键盘按键渐变 - 少使用 -->
+    <linearGradient id="keyLow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e3f2fd;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#bbdefb;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- 键盘按键渐变 - 中等使用 -->
+    <linearGradient id="keyMed" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#90caf9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#64b5f6;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- 键盘按键渐变 - 多使用 -->
+    <linearGradient id="keyHigh" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2196f3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1976d2;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- 阴影滤镜 -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- 方形圆角背景 -->
+  <rect x="0" y="0" width="1024" height="1024" rx="180" ry="180" fill="url(#bgGradient)"/>
+
+  <!-- 键盘主体 - 居中显示 -->
+  <g transform="translate(77, 352)">
+    <!-- 键盘外框 -->
+    <rect x="0" y="0" width="870" height="320" rx="24" fill="#ffffff" fill-opacity="0.15" stroke="#ffffff" stroke-width="2" stroke-opacity="0.3"/>
+
+    <!-- 键盘按键区域 -->
+    <g transform="translate(20, 20)" filter="url(#shadow)">
+
+      <!-- 数字键行: ` + 1-0 + - + = + Backspace -->
+      <g transform="translate(0, 0)">
+        <rect x="0" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="60" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="120" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="180" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="240" y="0" width="54" height="52" rx="8" fill="url(#keyHigh)"/>
+        <rect x="300" y="0" width="54" height="52" rx="8" fill="url(#keyHigh)"/>
+        <rect x="360" y="0" width="54" height="52" rx="8" fill="url(#keyHigh)"/>
+        <rect x="420" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="480" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="540" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="600" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="660" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="720" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="780" y="0" width="50" height="52" rx="8" fill="url(#keyLow)"/>
+      </g>
+
+      <!-- QWERTY 行: Tab + Q-P + [ + ] + \ -->
+      <g transform="translate(0, 60)">
+        <rect x="0" y="0" width="72" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="78" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="138" y="0" width="54" height="52" rx="8" fill="url(#keyHigh)"/>
+        <rect x="198" y="0" width="54" height="52" rx="8" fill="url(#keyHigh)"/>
+        <rect x="258" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="318" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="378" y="0" width="54" height="52" rx="8" fill="url(#keyHigh)"/>
+        <rect x="438" y="0" width="54" height="52" rx="8" fill="url(#keyHigh)"/>
+        <rect x="498" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="558" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="618" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="678" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="738" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="798" y="0" width="32" height="52" rx="8" fill="url(#keyLow)"/>
+      </g>
+
+      <!-- ASDF 行: Caps Lock + A-L + ; + ' + Return -->
+      <g transform="translate(0, 120)">
+        <rect x="0" y="0" width="84" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="90" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="150" y="0" width="54" height="52" rx="8" fill="url(#keyHigh)"/>
+        <rect x="210" y="0" width="54" height="52" rx="8" fill="url(#keyHigh)"/>
+        <rect x="270" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="330" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="390" y="0" width="54" height="52" rx="8" fill="url(#keyHigh)"/>
+        <rect x="450" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="510" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="570" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="630" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="690" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="750" y="0" width="80" height="52" rx="8" fill="url(#keyMed)"/>
+      </g>
+
+      <!-- ZXCV 行: Shift + Z-M + , + . + / + Shift -->
+      <g transform="translate(0, 180)">
+        <rect x="0" y="0" width="108" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="114" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="174" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="234" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="294" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="354" y="0" width="54" height="52" rx="8" fill="url(#keyHigh)"/>
+        <rect x="414" y="0" width="54" height="52" rx="8" fill="url(#keyHigh)"/>
+        <rect x="474" y="0" width="54" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="534" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="594" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="654" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="714" y="0" width="54" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="774" y="0" width="56" height="52" rx="8" fill="url(#keyMed)"/>
+      </g>
+
+      <!-- 空格键行: Fn + Control + Option + Command + Space + Command + Option -->
+      <g transform="translate(0, 240)">
+        <rect x="0" y="0" width="60" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="66" y="0" width="60" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="132" y="0" width="60" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="198" y="0" width="68" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="272" y="0" width="240" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="524" y="0" width="68" height="52" rx="8" fill="url(#keyMed)"/>
+        <rect x="598" y="0" width="60" height="52" rx="8" fill="url(#keyLow)"/>
+        <rect x="664" y="0" width="166" height="52" rx="8" fill="url(#keyLow)"/>
+      </g>
+
+    </g>
+  </g>
+
+  <!-- 底部装饰条 - 数据流效果 -->
+  <g transform="translate(162, 720)">
+    <rect x="0" y="0" width="700" height="8" rx="4" fill="#ffffff" fill-opacity="0.2"/>
+    <rect x="0" y="0" width="300" height="8" rx="4" fill="#ffffff" fill-opacity="0.6"/>
+  </g>
+</svg>
