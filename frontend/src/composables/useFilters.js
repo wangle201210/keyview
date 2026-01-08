@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { getCurrentMonthRange } from '@/utils/formatters'
+import { getLastMonthRange } from '@/utils/formatters'
 
 /**
  * 筛选管理 Composable
@@ -8,9 +8,9 @@ export function useFilters(records) {
   const filterKeyName = ref('')
   const dateRange = ref([])
 
-  // 初始化日期范围为当前月份
+  // 初始化日期范围为最近一个月
   function initDateRange() {
-    dateRange.value = getCurrentMonthRange()
+    dateRange.value = getLastMonthRange()
   }
 
   // 筛选后的记录

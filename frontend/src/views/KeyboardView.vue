@@ -12,6 +12,8 @@
       v-model:key-name="filterKeyName"
       v-model:date-range="dateRange"
       :unique-keys="uniqueKeys"
+      @focus="handleDateFocus"
+      @blur="handleDateBlur"
     />
 
     <!-- 虚拟键盘 -->
@@ -108,6 +110,7 @@ watch([filterKeyName, dateRange], () => {
 
 // 自动刷新定时器
 let refreshTimer = null
+let isDateFocused = false
 
 onMounted(async () => {
   initDateRange()
@@ -116,10 +119,26 @@ onMounted(async () => {
 
   // 每5秒自动刷新数据
   refreshTimer = setInterval(async () => {
-    await refreshAll()
-    await loadKeyStatsWithFilter()
+    // 当用户正在选择日期时，跳过自动刷新
+    if (!isDateFocused) {
+      await refreshAll()
+      await loadKeyStatsWithFilter()
+    }
   }, 5000)
 })
+
+// 处理日期选择器聚焦事件
+function handleDateFocus() {
+  isDateFocused = true
+}
+
+// 处理日期选择器失焦事件
+function handleDateBlur() {
+  isDateFocused = false
+  // 失焦后立即刷新一次数据
+  refreshAll()
+  loadKeyStatsWithFilter()
+}
 
 onUnmounted(() => {
   if (refreshTimer) {

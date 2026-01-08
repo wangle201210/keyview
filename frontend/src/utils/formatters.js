@@ -49,12 +49,13 @@ export function formatCount(num) {
 }
 
 /**
- * 获取当前月份的开始和结束日期
+ * 获取最近一个月的日期范围（从30天前到今天）
  * @returns {Date[]} [开始日期, 结束日期]
  */
-export function getCurrentMonthRange() {
+export function getLastMonthRange() {
   const now = new Date()
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-  return [firstDay, lastDay]
+  const endDate = new Date(now)
+  const startDate = new Date(now)
+  startDate.setDate(now.getDate() - 30)
+  return [startDate, endDate]
 }

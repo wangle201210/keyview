@@ -16,19 +16,25 @@
     </el-select>
 
     <el-date-picker
-      :model-value="dateRange"
-      @change="$emit('update:dateRange', $event)"
+      v-model="localDateRange"
       type="daterange"
       range-separator="至"
       start-placeholder="开始日期"
       end-placeholder="结束日期"
       style="width: 240px"
+      clearable
+      editable
+      @change="handleDateChange"
+      @focus="$emit('focus')"
+      @blur="$emit('blur')"
     />
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { ref, watch } from 'vue'
+
+const props = defineProps({
   keyName: {
     type: String,
     default: ''
@@ -43,7 +49,24 @@ defineProps({
   }
 })
 
-defineEmits(['update:keyName', 'update:dateRange'])
+const emit = defineEmits(['update:keyName', 'update:dateRange', 'focus', 'blur'])
+
+// 使用本地 ref 来管理日期选择器的值
+const localDateRange = ref([])
+
+// 监听外部 dateRange 变化，同步到本地
+watch(() => props.dateRange, (newVal) => {
+  if (newVal && newVal.length === 2) {
+    localDateRange.value = [...newVal]
+  } else {
+    localDateRange.value = []
+  }
+}, { immediate: true })
+
+// 处理日期变化
+function handleDateChange(value) {
+  emit('update:dateRange', value)
+}
 </script>
 
 <style scoped>
